@@ -862,6 +862,42 @@ SMODS.Joker{
 	end
 }
 
+-- Witherstalk NOT DONE
+SMODS.Joker{
+	key = 'wither',
+	loc_txt = {
+		name = 'Witherstalk',
+		text = {
+			'If played hand is High Card,',
+			'destroy one random card from played hand'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = true,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 2,
+
+	cost = 7,
+
+	pos = {x = 4, y = 3},
+
+	calculate = function(self, card, context)
+		if context.destroying_card and next(context.poker_hands['High Card']) and not context.blueprint then
+
+			local hand_size = #played_hand
+			local random_index = love.math.random(1, hand_size)
+			local selected_card = played_hand[random_index]
+			SMODS.destroy_card(selected_card)
+
+		end
+	end
+}
+
 -- Super Lucky Cards HALF DONE
 SMODS.Enhancement {
 	key = 'super',
