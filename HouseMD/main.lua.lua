@@ -81,6 +81,10 @@ context.type
 context.using_consumeable
 ]]
 
+-- Check List
+-- Jokers 5/20
+-- Actions 2/10
+-- Enhancments 0/2
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -93,7 +97,7 @@ SMODS.Atlas{
 	py = 95
 }
 
--- Burn Down the House DONE
+-- Burn Down the House DONE ✔️
 SMODS.Joker{
 	key = 'BurnDownTheHouse',
 	loc_txt = {
@@ -148,7 +152,7 @@ SMODS.Joker{
 	end
 }
 
--- Fool House DONE
+-- Fool House DONE ✔️
 SMODS.Joker{
 	key = 'FoolHouse',
 	loc_txt = {
@@ -270,7 +274,7 @@ SMODS.Joker{
 	end
 }
 
--- Reflecting Pools DONE
+-- Reflecting Pools DONE ✔️
 SMODS.Joker{
 	key = 'reflectingpools',
 	loc_txt = {
@@ -285,9 +289,9 @@ SMODS.Joker{
 	
 	blueprint_compat = false, 
 	
-	rarity = 3,
+	rarity = 2,
 
-	cost = 10,
+	cost = 7,
 
 	unlocked = true,
 
@@ -311,6 +315,7 @@ SMODS.Joker{
 			'Gains {X:mult,C:white}X0.25{} Mult',
 			'whenever a chance based effect',
 			'does not trigger.',
+			'Resets at the end of blind',
 			'{C:inactive}(Currently {X:mult,C:white} X#1#{C:inactive} Mult)'
 		}
 	},
@@ -330,8 +335,35 @@ SMODS.Joker{
 
 	pos = {x = 0, y = 1},
 
-	config = {extra = { Xmult = 1, Xmult_gain = 0.25}}
-	
+	config = {extra = { Xmult = 1, Xmult_gain = 0.5}},
+
+	loc_vars = function(self,info_queue,card)
+		info_queue[#info_queue + 1] = G.P_CENTERS.m_lucky
+		return {vars = {card.ability.extra.Xmult, card.ability.extra.Xmult_gain}}
+	end,
+
+	calculate = function(self, card, context)
+		if context.individual and context.cardarea == G.play and context.other_card.enhancment and context.other_card.enhancment.key == "m_lucky" and not context.other_card.lucky_trigger and not context.blueprint then
+			card.ability.extra.Xmult = card.ability.extra.Xmult + card.ability.extra.Xmult_gain
+			return {
+				message = localize('k_upgrade_ex'),
+				colour = G.C.MULT, 
+				message_card = card
+			}
+		end
+		if context.end_of_round and context.game_over == false and context.main_eval and not context.blueprint then
+            card.ability.extra.Xmult = 1
+            return {
+                message = localize('k_reset'),
+                colour = G.C.RED
+            }
+        end
+		if context.joker_main then
+            return {
+                xmult = card.ability.extra.Xmult
+            }
+        end
+	end, 	
 }
 
 -- Thin Ice NOT DONE
@@ -340,9 +372,9 @@ SMODS.Joker{
 	loc_txt = {
 		name = 'Thin Ice',
 		text = {
-			'Whenever a chance based effect triggers',
-			'destroy this Joker to create',
-			'3 negative hanged man cards'
+			'Whenever a {C:attention}chance based effect{} triggers',
+			'{X:mult,C:white}destroy{} this {C:attnetion}Joker{} to create',
+			'2 {C:dark_edition}Negative{} hanged man cards'
 		}
 	},
 	atlas = 'Jokers',
@@ -353,9 +385,9 @@ SMODS.Joker{
 
     discovered = true,
 	
-	rarity = 3,
+	rarity = 2,
 
-	cost = 10,
+	cost = 6,
 
 	pos = {x = 1, y = 1},
 }
@@ -392,23 +424,40 @@ SMODS.Joker{
 	loc_txt = {
 		name = 'Ad Nauseum',
 		text = {
-			'Retrigger first played lucky card',
+			'Retrigger first played {C:attention}lucky{} card',
 			'until it triggers twice.'
 		}
 	},
 	atlas = 'Jokers',
 
 	blueprint_compat = true,
-	
+
 	unlocked = true,  
 
     discovered = true,
 	
-	rarity = 3,
+	rarity = 2,
 
-	cost = 14,
+	cost = 6,
 
 	pos = {x = 3, y = 1},
+
+	config = { extra = { repetitions = 1 } },
+
+	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue + 1] = G.P_CENTERS.m_lucky
+	end,
+	calculate = function(self, card, context)
+		if context.individual and context.cardarea == G.play and not context.other_card.lucky_trigger then 
+			if context.other_card:is_lucky() then
+				return {
+					message = 'Again...',
+					repetitions = card.ability.extra.repetitions,
+					card = other.other_card
+				}
+			end
+		end
+	end
 }
 
 -- The Mold HALF DONE
@@ -488,14 +537,13 @@ SMODS.Joker{
         ease_discard(-card.ability.extra.d_size)
     end,
 
-	calculate = function(self, context, card, blind)
-        if context.drawing_cards  then
-            return {
-                cards_to_draw = 4
-            }   
+	calculate = function(self, context, card)
+        if context.drawing_cards and not context.blueprint then
+   	        return {
+    	        cards_to_draw = 3
+       	 	}   
         end
-    end
-	
+	end
 }
 
 --Seer Gift NOT DONE
@@ -530,8 +578,8 @@ SMODS.Joker{
 	loc_txt = {
 		name = 'Tome of the Dead',
 		text = {
-			'Gets the chips and mult',
-			'of discared cards.'
+			'Has the {C:chips}Chips{} and {C:mult}Mult{}',
+			'of last discarded hand'
 			
 		}
 	},
@@ -543,9 +591,9 @@ SMODS.Joker{
 
     discovered = true,
 	
-	rarity = 3,
+	rarity = 2,
 
-	cost = 12,
+	cost = 6,
 
 	pos = {x = 2, y = 2},
 
@@ -571,8 +619,8 @@ SMODS.Joker{
 		text = {
 			'If first discard of round',
 			'has exactly 2 cards',
-			'sitch them their effects together',
-			'{C:inactive}(Has the rank and suit of the left card,',
+			'sitch them together',
+			'{C:inactive}(Has the rank and suit of the right card,',
 			'{C:inactive} and the combined effects of both cards)'
 		}
 	},
@@ -590,7 +638,7 @@ SMODS.Joker{
 
 	pos = {x = 3, y = 2},
 
-	
+
 }
 
 -- Plantary Collapse NOT DONE
@@ -601,7 +649,144 @@ SMODS.Joker{
 		text = {
 			'Destroy all planet cards held',
 			'to upgrade discared hand',
-			'by 2 for each planet destroyed'
+			'for each planet destroyed'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = false,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 2,
+
+	cost = 6,
+
+	pos = {x = 4, y = 2},
+	calculate = function(self, card, context)
+        if context.pre_discard and G.GAME.current_round.discards_used <= 0 and not context.hook then
+            local text, _ = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
+            return {
+                level_up = true,
+                level_up_hand = text
+            }
+        end
+    end,
+}
+
+--[[
+
+Sudo code for plantary collapse
+
+local var = # of planets held
+
+if "context needed" then
+	local text, _ = "hand discarded"
+	for i = var do 
+		level_up_hand = text
+	end
+	destroy all planets
+	return {level_up = true} 
+end
+
+]]--
+
+
+-- Rossetta Stone NOT DONE
+SMODS.Joker{
+	key = 'Rossetta',
+	loc_txt = {
+		name = 'Rossetta Stone',
+		text = {
+			'2 times per blind',
+			'create a random {C:attention}action{} card',
+			'when using an {C:attention}action{} card'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = true,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 2,
+
+	cost = 7,
+
+	pos = {x = 0, y = 3},
+
+	calculate = function(self, card, context)
+		if context.using_consumeable and context.consumable.ability.set == 'Actions' then
+            SMODS.add_card {
+            set = 'Actions',
+            }
+		end
+	end	
+}
+
+-- The Man Who Sold the World DONE ✔️
+SMODS.Joker{
+	key = 'bigboss',
+	loc_txt = {
+		name = 'The Man Who Sold the World',
+		text = {
+			'When sold',
+			'create 2 random',
+			'{C:attention}action{} cards',
+			'{C:inactive}(Must have room){}'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = false,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 1,
+
+	cost = 5,
+
+	pos = {x = 1, y = 3},
+
+	config = {extra = {Actions = 2}},
+	loc_vars = function(self, info_queue, card)
+        return {vars = { card.ability.extra.Actions}}
+    end,
+	calculate = function(self, card, context)
+		if context.selling_self then
+			for i = 1, math.min(card.ability.extra.Actions, G.consumeables.config.card_limit - #G.consumeables.cards) do
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.4,
+                func = function()
+                    if G.consumeables.config.card_limit > #G.consumeables.cards then
+                        play_sound('timpani')
+                        SMODS.add_card({ set = 'Actions' })
+                        card:juice_up(0.3, 0.5)
+                    end
+                    return true
+                end
+            }))
+        	end
+        delay(0.6)
+		end
+	end
+}
+
+-- Combo Plush NOT DONE
+SMODS.Joker{
+	key = 'v1',
+	loc_txt = {
+		name = 'Combo Plush',
+		text = {
+			'Retrigger every {C:attention}action{} card',
+			'for each {C:attention}action{} used this blind'
 		}
 	},
 	atlas = 'Jokers',
@@ -616,16 +801,65 @@ SMODS.Joker{
 
 	cost = 10,
 
-	pos = {x = 4, y = 2},
+	pos = {x = 2, y = 3},
+}
+
+-- Bustling Fungus NOT DONE
+SMODS.Joker{
+	key = 'bungus',
+	loc_txt = {
+		name = 'Bustling Fungus ',
+		text = {
+			'Gain {C:money}$1{} for each blind beat',
+			'without using an {C:attention}action{}'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = true,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 2,
+
+	cost = 7,
+
+	pos = {x = 3, y = 3},
+}
+
+-- Time in a bottle DONE ✔️
+SMODS.Joker{
+	key = 'bottle',
+	loc_txt = {
+		name = 'Time in a Bottle',
+		text = {
+			'All {C:attention}Actions{}',
+			'are {C:dark_edition}Negative{}'
+		}
+	},
+	atlas = 'Jokers',
+
+	blueprint_compat = true,
+	
+	unlocked = true,  
+
+    discovered = true,
+	
+	rarity = 2,
+
+	cost = 7,
+
+	pos = {x = 4, y = 3},
+
 	calculate = function(self, card, context)
-        if context.pre_discard and G.GAME.current_round.discards_used <= 0 and not context.hook then
-            local text, _ = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
-            return {
-                level_up = true,
-                level_up_hand = text
-            }
-        end
-    end,
+		for k, v in pairs(G.consumeables.cards) do
+    		if v.ability.set == "Actions" then
+        		v:set_edition("e_negative")
+    		end
+		end
+	end
 }
 
 -- Super Lucky Cards HALF DONE
@@ -677,6 +911,295 @@ SMODS.Enhancement {
 	
 }
 
+-- Action Consumables
+SMODS.ConsumableType{
+	key = 'Actions',
+	primary_colour = G.C.ORANGE,
+	secondary_colour = G.C.DARK_EDITION,
+	collection_rows = {5, 5},
+	loc_txt = {
+		collection = 'Action Cards',
+		name = 'Action',
+		undiscovered = {
+			name = 'Hidden Action',
+			text = {'This sin has not', 'revealed itself'}
+		}
+	},
+	shop_rate = 100,
+}
 
+-- Action Undiscovered Sprite
+SMODS.UndiscoveredSprite{
+	key = 'Actions',
+	atlas = 'Jokers',
+	pos  = {x = 8, y = 0}
+}
+
+-- Gluttony NOT DONE
+SMODS.Consumable{
+	key = 'Gluttony',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 7, y = 3},
+	loc_txt = {
+		name = 'Gluttony',
+		text = {
+			'Destroy a Joker to gain',
+			'XMult equal to its',
+			'sell value',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Balance NOT DONE
+SMODS.Consumable{
+	key = 'Balance',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 5, y = 2},
+	loc_txt = {
+		name = 'Balance',
+		text = {
+			'Balance Chips and Mult',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Pride NOT DONE
+SMODS.Consumable{
+	key = 'Pride',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 6, y = 0},
+	loc_txt = {
+		name = 'Pride',
+		text = {
+			'Gain {C:chips}+200{} chips',
+			'and {C:mult}+20{} mult',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Greed NOT DONE
+SMODS.Consumable{
+	key = 'Greed',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 6, y = 2},
+	loc_txt = {
+		name = 'Greed',
+		text = {
+			'Add {C:money}$5{} to sell value',
+			'to all {C:attention}Jokers{}',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true,
+
+	config = {extra = {Xmult = 2}},
+
+	loc_vars = function(self, info_queue, card)
+		return {vars = {card.ability.extra.Xmult}}
+	end,
+}
+
+-- Sloth NOT DONE
+SMODS.Consumable{
+	key = 'Sloth',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 6, y = 1},
+	loc_txt = {
+		name = 'Sloth',
+		text = {
+			'Gain X2 Mult when held',
+			'{C:inactive}(Cannot be used){}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Sin DONE ✔️
+SMODS.Consumable{
+	key = 'Sin',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 6, y = 3},
+	loc_txt = {
+		name = 'Sin',
+		text = {
+			'Create up to 2', 
+			'random {C:attention}action{} cards',
+			'{C:inactive}(Must have room){}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true,
+
+	config = { extra = { Actions = 2 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.Actions } }
+    end,
+	use = function(self, card, area, copier)
+		for i = 1, math.min(card.ability.extra.Actions, G.consumeables.config.card_limit - #G.consumeables.cards) do
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.4,
+                func = function()
+                    if G.consumeables.config.card_limit > #G.consumeables.cards then
+                        play_sound('timpani')
+                        SMODS.add_card({ set = 'Actions' })
+                        card:juice_up(0.3, 0.5)
+                    end
+                    return true
+                end
+            }))
+        end
+        delay(0.6)
+    end,
+    can_use = function(self, card)
+        return G.consumeables and #G.consumeables.cards < G.consumeables.config.card_limit
+    end
+}
+
+-- Envy NOT DONE
+SMODS.Consumable{
+	key = 'Envy',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 7, y = 0},
+	loc_txt = {
+		name = 'Envy',
+		text = {
+			'{C:chips}+1{} hand and {C:mult}+1{} discard',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true,
+
+	config = { extra = { d_size = 4, hands = 1 } },
+
+	loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.d_size, card.ability.extra.hands } }
+    end,
+
+	use = function(self, card, area, copier)
+		G.E_MANAGER:add_event(Event({
+			trigger = 'after',
+			delay = 0.4,
+			func = function()
+				ease_hands_played(card.ability.extra.hands)
+    	    	ease_discard(card.ability.extra)
+        		return true 
+			end 
+		}))
+	end,	
+	can_use = function(self, card)
+        return G.GAME.blind.in_blind
+    end,
+}
+
+-- Lust NOT DONE
+SMODS.Consumable{
+	key = 'Lust',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 7, y = 1},
+	loc_txt = {
+		name = 'Lust',
+		text = {
+			'{C:attention}+2{} hand size',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Wrath NOT DONE
+SMODS.Consumable{
+	key = 'Wrath',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 7, y = 2},
+	loc_txt = {
+		name = 'Wrath',
+		text = {
+			'{C:mult}1/2{} Blind Size',
+			'{C:attention}For the rest of the Blind{}'
+		}
+	},
+
+	unlocked = true,  
+
+    discovered = true
+}
+
+-- Power ALMOST DONE
+SMODS.Consumable{
+	key = 'Power',
+	set = 'Actions',
+	atlas = 'Jokers',
+	pos = { x = 5, y = 3},
+	loc_txt = {
+		name = 'Power',
+		text = {
+			'Create a random', 
+			'rare {C:attention}Joker{}', 
+			'Triple the score requirement',
+			'{C:inactive}(Must have room){}',
+			'{C:inactive}(Can only be used during the Blind){}'
+		}
+	},
+	config = { ante_scaling = 2 },
+
+	unlocked = true,  
+
+    discovered = true,
+
+	use = function(self, card, area, copier)
+		 G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.4,
+            func = function()
+                SMODS.add_card({ set = 'Joker', rarity = 'Rare' })
+                card:juice_up(0.3, 0.5)
+				G.GAME.starting_params.ante_scaling = self.config.ante_scaling
+                return true
+            end
+        }))
+	end,
+	can_use = function(self, card)
+        return G.jokers and #G.jokers.cards < G.jokers.config.card_limit and G.GAME.blind.in_blind
+    end,
+}
 ----------------------------------------------
 ------------MOD CODE END----------------------
