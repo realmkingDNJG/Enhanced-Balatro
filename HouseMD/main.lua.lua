@@ -1021,24 +1021,6 @@ SMODS.Consumable{
 	end,
 }
 
--- Sloth NOT DONE
-SMODS.Consumable{
-	key = 'Sloth',
-	set = 'Actions',
-	atlas = 'Jokers',
-	pos = { x = 6, y = 1},
-	loc_txt = {
-		name = 'Sloth',
-		text = {
-			'Gain X2 Mult when held',
-			'{C:inactive}(Cannot be used){}'
-		}
-	},
-
-	unlocked = true,  
-
-    discovered = true
-}
 
 -- Sin DONE ✔️
 SMODS.Consumable{
